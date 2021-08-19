@@ -1,0 +1,20 @@
+{
+  "name": "tilde-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@discordjs/rest": "^0.1.0-canary.0",
+    "@google-cloud/firestore": "^4.14.1",
+    "discord-api-types": "^0.22.0",
+    "discord.js": "^13.1.0",
+    "dotenv": "^10.0.0",
+    "firebase": "^8.9.1",
+    "firebase-admin": "^9.11.0"
+  }
+}
