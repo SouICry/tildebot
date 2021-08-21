@@ -22,18 +22,25 @@ async function changeFlagPoints(m, isRemove = false) {
     if (isNaN(rank)) { return; }
     if (rank < 1) {
       points = 300;
+      m.react('0');
     } else if (rank == 1) {
       points = 3000;
+      m.react('1');
     } else if (rank == 2) {
       points = 1500;
+      m.react('2');
     } else if (rank == 3) {
       points = 1200;
+      m.react('3');
     } else if (rank == 4) {
       points = 1050;
+      m.react('4');
     } else if (rank == 5) {
       points = 900;
-    } else if (rank > 6) {
+      m.react('5');
+    } else if (rank >= 6) {
       points = 600;
+      m.react('6');
     }
 
     if (isRemove) {
@@ -50,7 +57,6 @@ async function changeFlagPoints(m, isRemove = false) {
     }
   }
 }
-
 
 client.once("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`)
