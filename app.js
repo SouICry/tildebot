@@ -22,25 +22,25 @@ async function changeFlagPoints(m, isRemove = false) {
     if (isNaN(rank)) { return; }
     if (rank < 1) {
       points = 300;
-      m.react('0');
+      m.react('one');
     } else if (rank == 1) {
       points = 3000;
-      m.react('1');
+      m.react('two');
     } else if (rank == 2) {
       points = 1500;
-      m.react('2');
+      m.react('three');
     } else if (rank == 3) {
       points = 1200;
-      m.react('3');
+      m.react('four');
     } else if (rank == 4) {
       points = 1050;
-      m.react('4');
+      m.react('five');
     } else if (rank == 5) {
       points = 900;
-      m.react('5');
+      m.react('six');
     } else if (rank >= 6) {
       points = 600;
-      m.react('6');
+      m.react('zero');
     }
 
     if (isRemove) {
