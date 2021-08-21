@@ -22,7 +22,7 @@ async function changeFlagPoints(m, isRemove = false) {
     if (isNaN(rank)) { return; }
     if (rank < 1) {
       points = 300;
-      m.react('one');
+      m.react(':one:');
     } else if (rank == 1) {
       points = 3000;
       m.react('two');
