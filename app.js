@@ -14,7 +14,7 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 let adminPoints = {};
 
 
-function changeFlagPoints(m, isRemove = false) {
+async function changeFlagPoints(m, isRemove = false) {
   const userId = m.author.id;
   let points = 300;
   if (m.content.length > 0) {
