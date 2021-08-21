@@ -45,7 +45,9 @@ async function changeFlagPoints(m, isRemove = false) {
       monthlyPoints: admin.firestore.FieldValue.increment(points),
       totalPoints: admin.firestore.FieldValue.increment(points),
     }, { merge: true });
-    m.react('✅');
+    if (!isRemove) {
+      m.react('✅');
+    }
   }
 }
 
@@ -72,16 +74,12 @@ client.once("ready", async () => {
 })
 
 client.on('messageDelete', async m => {
-  console.log(0);
   if (m.channel.id == '776954122464526386') {
-    console.log(1);
     if (m.attachments.size == 1) {
-      console.log(2);
       const reaction = m.reactions.resolve('✅');
       if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
         changeFlagPoints(m, true);
       }
-      console.log(3);
     }
   }
 });
