@@ -83,8 +83,11 @@ client.on('messageDelete', async m => {
 });
 
 client.on('messageUpdate', async (oldMessage, newMessage) => {
+  console.log(0);
   if (oldMessage.channel.id == '776954122464526386') {
+    console.log(1);
     if (oldMessage.attachments.size == 1 && newMessage.attachments.size == 1) {
+      console.log(2);
       const reaction = oldMessage.reactions.resolve('✅');
       if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
         changeFlagPoints(oldMessage, true);
