@@ -13,6 +13,47 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 
 let adminPoints = {};
 
+
+function changeFlagPoints(m, isRemove = false) {
+  const userId = m.author.id;
+  let points = 300;
+  if (m.content.length > 0) {
+    const rank = parseInt(m.content, 10);
+    if (isNaN(rank)) { return; }
+    if (rank < 1) {
+      points = 300;
+    } else if (rank == 1) {
+      points = 3000;
+    } else if (rank == 2) {
+      points = 1500;
+    } else if (rank == 3) {
+      points = 1200;
+    } else if (rank == 4) {
+      points = 1050;
+    } else if (rank == 5) {
+      points = 900;
+    } else if (rank > 6) {
+      points = 600;
+    }
+
+    if (isRemove) {
+      points = -points;
+    }
+
+    const pointsDoc = db.collection('points').doc(userId);
+    try {
+      await pointsDoc.set({
+        monthlyPoints: admin.firestore.FieldValue.increment(points),
+        totalPoints: admin.firestore.FieldValue.increment(points),
+      }, { merge: true });
+      m.react('✅');
+    } catch (e) {
+      // do nothing
+    }
+  }
+}
+
+
 client.once("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`)
 
@@ -29,45 +70,34 @@ client.once("ready", async () => {
       if (!attachment.contentType.includes('image') || m.content.length > 2) {
         return;
       }
-
-      const userId = m.author.id;
-      let points = 300;
-      if (m.content.length > 0) {
-        const rank = parseInt(m.content, 10);
-        if (isNaN(rank)) { return; }
-        if (rank < 1) {
-          points = 300;
-        } else
-          if (rank == 1) {
-            points = 3000;
-          } else if (rank == 2) {
-            points = 1500;
-          } else if (rank == 3) {
-            points = 1200;
-          } else if (rank == 4) {
-            points = 1050;
-          } else if (rank == 5) {
-            points = 900;
-          } else if (rank > 6) {
-            points = 600;
-          }
-
-        const pointsDoc = db.collection('points').doc(userId);
-        try {
-          await pointsDoc.set({
-            monthlyPoints: admin.firestore.FieldValue.increment(points),
-            totalPoints: admin.firestore.FieldValue.increment(points),
-          }, { merge: true });
-          m.react('✅');
-        } catch (e) {
-          // do nothing
-        }
-      }
+      changeFlagPoints(m);
     }
   });
 })
 
 
+client.on('messageDelete', async m => {
+  if (m.channel.id == '776954122464526386') {
+    if (m.attachments.size == 1) {
+      const reaction = m.reactions.resolve('✅');
+      if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
+        changeFlagPoints(m, true);
+      }
+    }
+  }
+});
+
+client.on('messageUpdate', async (oldMessage, newMessage) => {
+  if (message.channel.id == '776954122464526386') {
+    if (m.attachments.size == 1) {
+      const reaction = m.reactions.resolve('✅');
+      if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
+        reaction.remove();
+        changeFlagPoints(m, true);
+      }
+    }
+  }
+});
 
 client.on('interactionCreate', async interaction => {
   if (!interaction.isCommand()) return;
