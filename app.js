@@ -41,15 +41,11 @@ function changeFlagPoints(m, isRemove = false) {
     }
 
     const pointsDoc = db.collection('points').doc(userId);
-    try {
-      await pointsDoc.set({
-        monthlyPoints: admin.firestore.FieldValue.increment(points),
-        totalPoints: admin.firestore.FieldValue.increment(points),
-      }, { merge: true });
-      m.react('✅');
-    } catch (e) {
-      // do nothing
-    }
+    await pointsDoc.set({
+      monthlyPoints: admin.firestore.FieldValue.increment(points),
+      totalPoints: admin.firestore.FieldValue.increment(points),
+    }, { merge: true });
+    m.react('✅');
   }
 }
 
@@ -92,7 +88,7 @@ client.on('messageUpdate', async (oldMessage, newMessage) => {
     if (m.attachments.size == 1) {
       const reaction = m.reactions.resolve('✅');
       if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
-        reaction.remove();
+        reaction.remove()
         changeFlagPoints(m, true);
       }
     }
