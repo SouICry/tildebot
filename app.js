@@ -71,7 +71,6 @@ client.once("ready", async () => {
   });
 })
 
-
 client.on('messageDelete', async m => {
   if (m.channel.id == '776954122464526386') {
     if (m.attachments.size == 1) {
@@ -84,12 +83,12 @@ client.on('messageDelete', async m => {
 });
 
 client.on('messageUpdate', async (oldMessage, newMessage) => {
-  if (message.channel.id == '776954122464526386') {
-    if (m.attachments.size == 1) {
-      const reaction = m.reactions.resolve('✅');
+  if (oldMessage.channel.id == '776954122464526386') {
+    if (oldMessage.attachments.size == 1 && newMessage.attachments.size == 1) {
+      const reaction = oldMessage.reactions.resolve('✅');
       if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
-        reaction.remove()
-        changeFlagPoints(m, true);
+        changeFlagPoints(oldMessage, true);
+        changeFlagPoints(newMessage);
       }
     }
   }
