@@ -6,9 +6,15 @@ const db = new Firestore({
 const admin = require('firebase-admin');
 
 require('dotenv').config();
-const Discord = require("discord.js")
-const { Client, Intents } = require('discord.js');
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES] })
+const { Client, Intents, Options } = require('discord.js');
+const client = new Client({
+  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES],
+  makeCache: Options.cacheWithLimits({
+    ...Options.defaultMakeCacheSettings,
+    MessageManager: 400,
+  })
+})
+
 
 
 let adminPoints = {};
@@ -22,25 +28,39 @@ async function changeFlagPoints(m, isRemove = false) {
     if (isNaN(rank)) { return; }
     if (rank < 1) {
       points = 300;
-      m.react('0️⃣');
+      if (!isRemove) {
+        m.react('0️⃣');
+      }
     } else if (rank == 1) {
       points = 3000;
-      m.react('1️⃣');
+      if (!isRemove) {
+        m.react('1️⃣');
+      }
     } else if (rank == 2) {
       points = 1500;
-      m.react('2️⃣');
+      if (!isRemove) {
+        m.react('2️⃣');
+      }
     } else if (rank == 3) {
       points = 1200;
-      m.react('3️⃣');
+      if (!isRemove) {
+        m.react('3️⃣');
+      }
     } else if (rank == 4) {
       points = 1050;
-      m.react('4️⃣');
+      if (!isRemove) {
+        m.react('4️⃣');
+      }
     } else if (rank == 5) {
       points = 900;
-      m.react('5️⃣');
+      if (!isRemove) {
+        m.react('5️⃣');
+      }
     } else if (rank >= 6) {
       points = 600;
-      m.react('6️⃣');
+      if (!isRemove) {
+        m.react('6️⃣');
+      }
     }
 
     if (isRemove) {
@@ -67,6 +87,7 @@ client.once("ready", async () => {
   })
 
   const flagChannel = await client.channels.fetch(/*'603701097420292105'*/'776954122464526386');
+  flagChannel.fetch(true);
   const flagCollector = flagChannel.createMessageCollector();
   flagCollector.on('collect', async m => {
     if (m.attachments.size == 1) {
@@ -92,11 +113,16 @@ client.on('messageDelete', async m => {
 
 client.on('messageUpdate', async (oldMessage, newMessage) => {
   if (oldMessage.channel.id == '776954122464526386') {
-    if (oldMessage.attachments.size == 1 && newMessage.attachments.size == 1) {
+    if (oldMessage.attachments.size == 1) {
       const reaction = oldMessage.reactions.resolve('✅');
       if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
-        changeFlagPoints(oldMessage, true);
-        changeFlagPoints(newMessage);
+        if (Date.now() - oldMessage.createdTimestamp < 86400000) {
+          changeFlagPoints(oldMessage, true);
+          await newMessage.reactions.removeAll();
+          if (newMessage.attachments.size == 1) {
+            changeFlagPoints(newMessage);
+          }
+        }
       }
     }
   }
