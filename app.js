@@ -164,7 +164,10 @@ client.on('interactionCreate', async interaction => {
         snap.forEach(doc => {
           res.push(`${res.length + 1}) <@${doc.id}>: ${doc.data()[order]}`)
         });
-        await interaction.reply(`${desc}\n` + res.join('\n'), { "allowedMentions": { "users": [] } });
+        await interaction.reply({
+          content: `${desc}\n` + res.join('\n'),
+          allowedMentions: { "users": [] }
+        });
       } else if (interaction.options.getSubcommand() == 'add') {
         if (!adminPoints[interaction.user.id]) {
           await interaction.reply('You need permission to add points.');
