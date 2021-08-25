@@ -146,6 +146,25 @@ client.on('interactionCreate', async interaction => {
           Total: ${data.totalPoints}\nThis month: ${data.monthlyPoints}\nLast month: ${data.lastMonthPoints}
           `);
         }
+      } else if (interaction.options.getSubcommand() == 'leaderboard') {
+        let order, desc;
+        const choice = interaction.options.get('which').value;
+        if (choice == 'total') {
+          order = 'totalPoints'
+          desc = 'Total';
+        } else if (choice == 'last_month') {
+          order = 'lastMonthPoints';
+          desc = 'Last Month';
+        } else if (choice == 'this_month') {
+          order = 'monthlyPoints';
+          desc = 'This Month';
+        }
+        const snap = await db.collection('points').orderBy(order, 'desc').limit(10).get();
+        const res = [];
+        snap.forEach(doc => {
+          res.push(`${res.length + 1}) <@${doc.id}>: ${doc.data()[order]}`)
+        });
+        await interaction.reply(`${desc}\n` + res.join('\n'), { "allowedMentions": { "users": [] } });
       } else if (interaction.options.getSubcommand() == 'add') {
         if (!adminPoints[interaction.user.id]) {
           await interaction.reply('You need permission to add points.');

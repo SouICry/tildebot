@@ -27,7 +27,33 @@ const commands = [{
                     }
                 ]
             },
-
+            {
+                type: Discord.Constants.ApplicationCommandOptionTypes.SUB_COMMAND,
+                name: 'leaderboard',
+                description: 'Check the points leaderboard.',
+                options: [
+                    {
+                        type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
+                        name: 'which',
+                        required: true,
+                        description: 'Which to check',
+                        choices: [
+                            {
+                                name: 'total',
+                                value: 'total'
+                            },
+                            {
+                                name: 'this_month',
+                                value: 'this_month'
+                            },
+                            {
+                                name: 'last_month',
+                                value: 'last_month'
+                            }
+                        ]
+                    }
+                ]
+            },
             {
                 type: Discord.Constants.ApplicationCommandOptionTypes.SUB_COMMAND,
                 name: 'add',
@@ -123,7 +149,7 @@ const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
         console.log('Started refreshing application (/) commands.');
 
         await rest.put(
-            Routes.applicationGuildCommands('877028314357825546', '603701097420292101'/*'376166026099818499'*/),
+            Routes.applicationGuildCommands('877028314357825546', '376166026099818499'/*'376166026099818499'*/),
             { body: commands },
         );
 
