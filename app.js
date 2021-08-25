@@ -173,7 +173,7 @@ client.on('interactionCreate', async interaction => {
           const userDoc = db.collection('points').doc(userId);
           const points = interaction.options.get('amount').value;
           await userDoc.set({
-            monthlyPoints: admin.firestore.FieldValue.increment(points),
+            /*monthlyPoints: admin.firestore.FieldValue.increment(points),*/
             totalPoints: admin.firestore.FieldValue.increment(points),
           }, { merge: true });
           await interaction.reply(points + ` points added for <@!${userId}>.`);
