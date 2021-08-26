@@ -21,10 +21,19 @@ let adminPoints = {};
 
 
 async function changeFlagPoints(m, isRemove = false) {
-  const userId = m.author.id;
+  let userId = m.author.id;
   let points = 300;
   if (m.content.length > 0) {
-    const rank = parseInt(m.content, 10);
+    let content = m.content;
+    if (m.mentions.users.size == 1) {
+      content = m.content.split(' ')[0];
+    }
+
+    if (content.length > 2) {
+      return;
+    }
+
+    const rank = parseInt(content, 10);
     if (isNaN(rank)) { return; }
     if (rank < 1) {
       points = 300;
@@ -67,6 +76,9 @@ async function changeFlagPoints(m, isRemove = false) {
       points = -points;
     }
 
+    if (m.mentions.users.size == 1) {
+      userId = m.mentions.users.firstKey();
+    }
     const pointsDoc = db.collection('points').doc(userId);
     await pointsDoc.set({
       monthlyPoints: admin.firestore.FieldValue.increment(points),
@@ -92,7 +104,8 @@ client.once("ready", async () => {
   flagCollector.on('collect', async m => {
     if (m.attachments.size == 1) {
       const attachment = m.attachments.values().next().value;
-      if (!attachment.contentType.includes('image') || m.content.length > 2) {
+      if (!attachment.contentType.includes('image') ||
+        (m.content.length > 2 && m.mentions.users.size != 1)) {
         return;
       }
       changeFlagPoints(m);
