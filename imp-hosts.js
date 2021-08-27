@@ -16,7 +16,7 @@ const http = require('http');
 
 const requestListener = function (req, res) {
     res.writeHead(200);
-    res.end(hosts.toString());
+    res.end(JSON.stringify(hosts));
 }
 
 const server = http.createServer(requestListener);
