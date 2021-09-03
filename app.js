@@ -4,6 +4,7 @@ const db = new Firestore({
   keyFilename: 'k.json',
 });
 const admin = require('firebase-admin');
+const FieldValue = admin.firestore.FieldValue;
 
 require('dotenv').config();
 const { Client, Intents, Options } = require('discord.js');
@@ -14,6 +15,42 @@ const client = new Client({
     MessageManager: 400,
   })
 })
+
+
+const milliPerWeek = 7 * 24 * 60 * 60 * 1000;
+
+function getWeekStartTimeMillis() {
+  const d = new Date();
+  let day = d.getUTCDay();
+  if (day == 0) {
+    day = 7;
+  }
+  day--;
+  return d.getTime() - ((((day * 24 + d.getUTCHours()) * 60 +
+    d.getUTCMinutes()) * 60 + d.getUTCSeconds()) * 1000 + d.getUTCMilliseconds())
+}
+
+let weekStartTimeMillis, weekStart;
+
+function updateWeekStart() {
+  weekStartTimeMillis = getWeekStartTimeMillis();
+  weekStart = new Date(weekStartTimeMillis).toISOString()
+  console.log('Week start: ' + weekStart);
+}
+
+updateWeekStart();
+setTimeout(() => {
+  setInterval(() => {
+    updateWeekStart()
+  }, milliPerWeek)
+}, weekStartTimeMillis + milliPerWeek - Date.now() + 1000);
+
+
+
+
+// todo: weekly job to update week start time and move points to past week.
+// Monthly record swtich to past 5 week sum.
+
 
 
 
@@ -80,10 +117,25 @@ async function changeFlagPoints(m, isRemove = false) {
       userId = m.mentions.users.firstKey();
     }
     const pointsDoc = db.collection('points').doc(userId);
-    await pointsDoc.set({
-      monthlyPoints: admin.firestore.FieldValue.increment(points),
-      totalPoints: admin.firestore.FieldValue.increment(points),
-    }, { merge: true });
+
+    const weekFlagText = weekStart + ' Flag';
+    const weekPointText = weekStart + ' Points';
+
+    await Promise.all([
+      pointsDoc.set({
+        monthlyPoints: FieldValue.increment(points),
+        totalPoints: FieldValue.increment(points),
+        [weekFlagText]: FieldValue.increment(points),
+        [weekPointText]: FieldValue.increment(points)
+      }, { merge: true }),
+      (isRemove ?
+        pointsDoc.collection('flag').doc(m.id).delete() :
+        pointsDoc.collection('flag').doc(m.id).set({
+          rank: rank,
+          week: weekStart,
+          timestamp: FieldValue.serverTimestamp()
+        }, { merge: true }))
+    ]);
     if (!isRemove) {
       m.react('✅');
     }
@@ -189,8 +241,8 @@ client.on('interactionCreate', async interaction => {
           const userDoc = db.collection('points').doc(userId);
           const points = interaction.options.get('amount').value;
           await userDoc.set({
-            /*monthlyPoints: admin.firestore.FieldValue.increment(points),*/
-            totalPoints: admin.firestore.FieldValue.increment(points),
+            monthlyPoints: FieldValue.increment(points),
+            totalPoints: FieldValue.increment(points),
           }, { merge: true });
           await interaction.reply(points + ` points added for <@!${userId}>.`);
         }
@@ -207,7 +259,7 @@ client.on('interactionCreate', async interaction => {
             await interaction.reply('Not enough points.');
           } else {
             await user.set({
-              totalPoints: admin.firestore.FieldValue.increment(-points),
+              totalPoints: FieldValue.increment(-points),
             }, { merge: true });
             await interaction.reply(points + ` points redeemed from <@!${userId}>`);
           }
@@ -226,12 +278,26 @@ client.on('interactionCreate', async interaction => {
             }
           }
 
+          let checkedUsers = [];
+          users.forEach(async userId => {
+            const doc = db.collection('points').doc(userId);
+            const curr = await doc.get();
+            const gpq = curr.data().gpq;
+            console.log(gpq[gpq.length - 1]);
+            console.log(weekStart);
+            if (!gpq || gpq.length == 0 || gpq[gpq.length - 1] < weekStart) {
+              checkedUsers.push(userId)
+            }
+          })
+
           await db.runTransaction(async t => {
-            users.forEach(userId => {
-              t.set(db.collection('points').doc(userId), {
-                monthlyPoints: admin.firestore.FieldValue.increment(20000),
-                totalPoints: admin.firestore.FieldValue.increment(20000),
-              }, { merge: true })
+            checkedUsers.forEach(userId => {
+              const doc = db.collection('points').doc(userId);
+              t.set(doc, {
+                monthlyPoints: FieldValue.increment(20000),
+                totalPoints: FieldValue.increment(20000),
+                gpq: FieldValue.arrayUnion(weekStart)
+              }, { merge: true });
             })
           })
           await interaction.reply(`GPQ attendance recorded for <@!${users.join('> <@!')}>.`);
