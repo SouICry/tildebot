@@ -283,8 +283,6 @@ client.on('interactionCreate', async interaction => {
             const doc = db.collection('points').doc(userId);
             const curr = await doc.get();
             const gpq = curr.data().gpq;
-            console.log(gpq[gpq.length - 1]);
-            console.log(weekStart);
             if (!gpq || gpq.length == 0 || gpq[gpq.length - 1] < weekStart) {
               checkedUsers.push(userId)
             }
