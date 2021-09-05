@@ -279,19 +279,24 @@ client.on('interactionCreate', async interaction => {
           }
 
           let checkedUsers = [];
-          users.forEach(async userId => {
-            const doc = db.collection('points').doc(userId);
-            const curr = await doc.get();
-            if (curr.exists) {
-              const gpq = curr.data().gpq;
-              if (!gpq || gpq.length == 0 || gpq[gpq.length - 1] < weekStart) {
+          await new Promise((resolve, reject) => {
+            users.forEach(async (userId, index) => {
+              const doc = db.collection('points').doc(userId);
+              const curr = await doc.get();
+              if (curr.exists) {
+                const gpq = curr.data().gpq;
+
+                if (!gpq || gpq.length == 0 || gpq[gpq.length - 1] < weekStart) {
+                  checkedUsers.push(userId)
+                }
+              } else {
                 checkedUsers.push(userId)
               }
-            } else {
-              checkedUsers.push(userId)
-            }
-          })
-
+              if (index === users.length - 1) {
+                resolve();
+              }
+            })
+          });
           await db.runTransaction(async t => {
             checkedUsers.forEach(userId => {
               const doc = db.collection('points').doc(userId);
