@@ -42,14 +42,6 @@ const commands = [{
                                 name: 'total',
                                 value: 'total'
                             },
-                            {
-                                name: 'this_month',
-                                value: 'this_month'
-                            },
-                            {
-                                name: 'last_month',
-                                value: 'last_month'
-                            }
                         ]
                     }
                 ]

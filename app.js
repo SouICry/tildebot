@@ -30,11 +30,14 @@ function getWeekStartTimeMillis() {
     d.getUTCMinutes()) * 60 + d.getUTCSeconds()) * 1000 + d.getUTCMilliseconds())
 }
 
-let weekStartTimeMillis, weekStart, prevWeekStartTimeMillis, prevWeekStrings, prevWeekPointStrings;
+let weekStartTimeMillis, weekStart, prevWeekStartTimeMillis, prevWeekStrings, prevWeekPointStrings,
+  weekPointString, weekFlagString;
 
 function updateWeekStart() {
   weekStartTimeMillis = getWeekStartTimeMillis();
   weekStart = new Date(weekStartTimeMillis).toISOString()
+  weekPointString = weekStart + ` Points`;
+  weekFlagString = weekStart + ` Flag`;
   console.log('Week start: ' + weekStart);
 
   prevWeekStartTimeMillis = [weekStartTimeMillis - milliPerWeek];
@@ -57,7 +60,6 @@ setTimeout(() => {
 
 
 // todo: weekly job to update week start time and move points to past week.
-// Monthly record swtich to past 5 week sum.
 
 
 
@@ -126,15 +128,11 @@ async function changeFlagPoints(m, isRemove = false) {
     }
     const pointsDoc = db.collection('points').doc(userId);
 
-    const weekFlagText = weekStart + ' Flag';
-    const weekPointText = weekStart + ' Points';
-
     await Promise.all([
       pointsDoc.set({
-        monthlyPoints: FieldValue.increment(points),
+        [weekPointString]: FieldValue.increment(points),
         totalPoints: FieldValue.increment(points),
-        [weekFlagText]: FieldValue.increment(points),
-        [weekPointText]: FieldValue.increment(points)
+        [weekFlagString]: FieldValue.increment(points),
       }, { merge: true }),
       (isRemove ?
         pointsDoc.collection('flag').doc(m.id).delete() :
@@ -215,8 +213,15 @@ client.on('interactionCreate', async interaction => {
           await interaction.reply('No points recorded for this user.');
         } else {
           const data = userDoc.data();
+          let prev4Week = 0;
+          prevWeekPointStrings.forEach(s => {
+            if (data[s]) {
+              prev4Week += data[s];
+            }
+          })
+
           await interaction.reply(`
-          Total: ${data.totalPoints}\nThis month: ${data.monthlyPoints}\nLast month: ${data.lastMonthPoints}
+          Total: ${data.totalPoints}\nThis week: ${data[weekPointString]}\nLast 4 weeks(after 8/28/21): ${prev4Week}
           `);
         }
       } else if (interaction.options.getSubcommand() == 'leaderboard') {
@@ -225,12 +230,6 @@ client.on('interactionCreate', async interaction => {
         if (choice == 'total') {
           order = 'totalPoints'
           desc = 'Total';
-        } else if (choice == 'last_month') {
-          order = 'lastMonthPoints';
-          desc = 'Last Month';
-        } else if (choice == 'this_month') {
-          order = 'monthlyPoints';
-          desc = 'This Month';
         }
         const snap = await db.collection('points').orderBy(order, 'desc').limit(10).get();
         const res = [];
@@ -249,7 +248,7 @@ client.on('interactionCreate', async interaction => {
           const userDoc = db.collection('points').doc(userId);
           const points = interaction.options.get('amount').value;
           await userDoc.set({
-            monthlyPoints: FieldValue.increment(points),
+            [weekPointString]: FieldValue.increment(points),
             totalPoints: FieldValue.increment(points),
           }, { merge: true });
           await interaction.reply(points + ` points added for <@!${userId}>.`);
@@ -309,7 +308,7 @@ client.on('interactionCreate', async interaction => {
             checkedUsers.forEach(userId => {
               const doc = db.collection('points').doc(userId);
               t.set(doc, {
-                monthlyPoints: FieldValue.increment(20000),
+                [weekPointString]: FieldValue.increment(20000),
                 totalPoints: FieldValue.increment(20000),
                 gpq: FieldValue.arrayUnion(weekStart)
               }, { merge: true });
