@@ -17,9 +17,31 @@ const client = new Client({
 })
 
 const f = async () => {
+  const snap = await db.collection('points').where('totalPoints', '!=', 0).get();
+  const p = [];
+  snap.forEach(async (doc, index) => {
+    const dat = doc.data();
+    if (dat['2021-08-23T00:00:00.000Z Points'] >= 20000) {
+      if (dat['2021-08-23T00:00:00.000Z Points'] > 20000) {
+        if (dat['2021-08-30T00:00:00.000Z Points']) {
+          dat['2021-08-30T00:00:00.000Z Points'] -= 20000;
+        } else {
+          dat['2021-08-30T00:00:00.000Z Points'] = 0;
+        }
+        console.log(doc.id);
+      }
+      if (dat['2021-08-30T00:00:00.000Z Points']) {
+        dat['2021-08-30T00:00:00.000Z Points'] += 20000;
+      } else {
+        dat['2021-08-30T00:00:00.000Z Points'] = 20000;
+      }
 
-  const dat = await db.collection('points').doc('103718711105421312').get();
-  console.log(dat.data().gpq)
+      p.push(db.collection('points').doc(doc.id).set(dat));
+      console.log(doc.id);
+    }
+
+  });
+  await Promise.all(p);
 }
 f();
 

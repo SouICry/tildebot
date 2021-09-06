@@ -30,12 +30,19 @@ function getWeekStartTimeMillis() {
     d.getUTCMinutes()) * 60 + d.getUTCSeconds()) * 1000 + d.getUTCMilliseconds())
 }
 
-let weekStartTimeMillis, weekStart;
+let weekStartTimeMillis, weekStart, prevWeekStartTimeMillis, prevWeekStrings, prevWeekPointStrings;
 
 function updateWeekStart() {
   weekStartTimeMillis = getWeekStartTimeMillis();
   weekStart = new Date(weekStartTimeMillis).toISOString()
   console.log('Week start: ' + weekStart);
+
+  prevWeekStartTimeMillis = [weekStartTimeMillis - milliPerWeek];
+  for (let i = 0; i < 2; i++) {
+    prevWeekStartTimeMillis.push(prevWeekStartTimeMillis[i] - milliPerWeek);
+  }
+  prevWeekStrings = prevWeekStartTimeMillis.map(t => new Date(t).toISOString())
+  prevWeekPointStrings = prevWeekStrings.map(t => t + ` Points`);
 }
 
 updateWeekStart();
