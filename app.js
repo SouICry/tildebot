@@ -40,8 +40,9 @@ function updateWeekStart() {
 
 updateWeekStart();
 setTimeout(() => {
+  updateWeekStart();
   setInterval(() => {
-    updateWeekStart()
+    updateWeekStart();
   }, milliPerWeek)
 }, weekStartTimeMillis + milliPerWeek - Date.now() + 1000);
 
