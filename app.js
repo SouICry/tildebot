@@ -221,8 +221,7 @@ client.on('interactionCreate', async interaction => {
           })
 
           await interaction.reply(`
-          Guyue fucked up the database so everyone is 0, will add missing points back in next few days (dont delete any posts before 9/7 in flag-request channel).
-          Total: ${data.totalPoints}\nThis week: ${data[weekPointString]}\nLast 4 weeks(after 8/28/21): ${prev4Week}
+          Guyue fucked up the database so everyone was reset to 0, will add missing points back in next few days (dont delete any posts before 9/7 in flag-request channel). \nTotal: ${data.totalPoints}\nThis week: ${data[weekPointString]}\nLast 4 weeks(after 8/28/21): ${prev4Week}
           `);
         }
       } else if (interaction.options.getSubcommand() == 'leaderboard') {
