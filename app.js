@@ -59,7 +59,7 @@ setTimeout(() => {
 
 
 
-// todo: weekly job to update week start time and move points to past week.
+// todo: print out imp access, week diff for imp access
 
 
 
@@ -221,6 +221,7 @@ client.on('interactionCreate', async interaction => {
           })
 
           await interaction.reply(`
+          Guyue fucked up the database so everyone is 0, will add missing points back in next few days (dont delete any posts before 9/7 in flag-request channel).
           Total: ${data.totalPoints}\nThis week: ${data[weekPointString]}\nLast 4 weeks(after 8/28/21): ${prev4Week}
           `);
         }
