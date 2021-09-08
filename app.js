@@ -31,13 +31,12 @@ function getWeekStartTimeMillis() {
 }
 
 let weekStartTimeMillis, weekStart, prevWeekStartTimeMillis, prevWeekStrings, prevWeekPointStrings,
-  weekPointString, weekFlagString;
+  weekPointString;
 
 function updateWeekStart() {
   weekStartTimeMillis = getWeekStartTimeMillis();
   weekStart = new Date(weekStartTimeMillis).toISOString()
   weekPointString = weekStart + ` Points`;
-  weekFlagString = weekStart + ` Flag`;
   console.log('Week start: ' + weekStart);
 
   prevWeekStartTimeMillis = [weekStartTimeMillis - milliPerWeek];
@@ -132,7 +131,6 @@ async function changeFlagPoints(m, isRemove = false) {
       pointsDoc.set({
         [weekPointString]: FieldValue.increment(points),
         totalPoints: FieldValue.increment(points),
-        [weekFlagString]: FieldValue.increment(points),
       }, { merge: true }),
       (isRemove ?
         pointsDoc.collection('flag').doc(m.id).delete() :
@@ -221,7 +219,7 @@ client.on('interactionCreate', async interaction => {
           })
 
           await interaction.reply(`
-          Guyue fucked up the database so everyone was reset to 0, will add missing points back in next few days (dont delete any posts before 9/7 in flag-request channel). \nTotal: ${data.totalPoints}\nThis week: ${data[weekPointString]}\nLast 4 weeks(after 8/28/21): ${prev4Week}
+          Guyue fucked up the database so gpq points were reset to 0, will add missing points back in next few days . \nTotal: ${data.totalPoints}\nThis week: ${data[weekPointString]}\nLast 4 weeks(after 8/28/21): ${prev4Week}
           `);
         }
       } else if (interaction.options.getSubcommand() == 'leaderboard') {

@@ -15,17 +15,184 @@ const client = new Client({
     MessageManager: 400,
   })
 })
-a = '["297945038439186432","267183271333330945","368678600607531008","280096430356430848","660778448465166336","195461452910297088","355984109631307776","695935439965650977","125825194676846593","173543058883739650","204821750897180672","213265940383662080","274471992512610304","373320372604633088","700475420402909305","744284134699958283","89208882697617408","761831526233014292","178763270654656513","221196470605447168","238128347505229824","520867846096551936","123969386305421313","308085536176865280","308085536176865280","92732477512101888","92732477512101888","237001432832671744","261233301837185034","295449058930327554","528014180142415902","257318959638904833","621542965520629790","621542965520629790","158453090507292672","282740162725937153","328385377725579264","339770090880892929","448365963528634368","753447291079229530","97051535699091456","97051535699091456","659032048408985610","408177089997570055","262036238045937664","404633572767432706","744024287794561054","744024287794561054","593803427906322433","593803427906322433","212971210005282816","236660386705833985","105875328546689024","123155829988786176","417281000368898049","696160491780964424","235849788900376587","176501648632315904","265710806912466946","433722341667766292","404765247153373204","202908317725622272","584421679359590401","103718711105421312","103718711105421312","423299020795019265","174406589854384129","174406589854384129","243941030959775746","298673399230758914","298673399230758914","387115558744883204","387115558744883204","313220656084811786","313220656084811786","328036883303235585","128213304916049920","477825938906808321","142377217190526976","322618881585709056","208779108358815746","165207884077072385","165207884077072385","199326581544452096","598692509333585922","476328982112108544","254038463463030784","242430489540034563","700915328619642911","207047585800781824","183401747971178505","230423168026673153","311261053197615114","536023738924269579","586665601905197066","665785670559727617","127868141513474048","127868141513474048","219630406209634305","230452234893262851","204789334023340032","204789334023340032","176895074913746944","214563338116399104","210965205134475265","210965205134475265","274148944416866304","667414458339164181","336346445646921732","167528079600648193","746518680359272559","746518680359272559","129789233404575744","373329305058410517","276149771834753024","215610046732697601","150844975947448320","150844975947448320","253405226701160450","253405226701160450","321198178902999040","538059759438528517","538059759438528517","184029195519655936","280307509628108802","660307320055791636","447624082469683202","447624082469683202","705754573339623476","386695975399587841","188197279822381056","188197279822381056","368795239483310081","401212793115901952","382785958665519104","382785958665519104","151824681698197504","120431037388947456","120431037388947456","185956056546017290","113473785348231168","113473785348231168","681958022041567261","681958022041567261","207422506989125632","207422506989125632","217509815474192384","217509815474192384","278705120789921794","278705120789921794","187298758348767233","187298758348767233","475342909986570240","190320532707737600","190320532707737600","546785621012774912","235264835200352256","81980303073083392","81980303073083392","147838346360651776","147838346360651776","544298974274650117","544298974274650117","390578775546658816","390578775546658816","108759575297052672","108759575297052672","669679751199326249","198531163919351808","198531163919351808"]';
-const f = async () => {
-  s = JSON.parse(a);
-  let p = []
-  s.forEach(async (id) => {
-    p.push(db.collection('points').doc(id).update({
-      totalPoints: 0
-    }));
-    console.log(id);
-  });
-  await Promise.all(p);
+
+
+const milliPerWeek = 7 * 24 * 60 * 60 * 1000;
+let weekStartTimeMillis, weekStart, prevWeekStartTimeMillis, prevWeekStrings, prevWeekPointStrings, prevWeekFlagStrings,
+  weekPointString, weekFlagString;
+
+function getWeekStartTimeMillis() {
+  const d = new Date();
+  let day = d.getUTCDay();
+  if (day == 0) {
+    day = 7;
+  }
+  day--;
+  return d.getTime() - ((((day * 24 + d.getUTCHours()) * 60 +
+    d.getUTCMinutes()) * 60 + d.getUTCSeconds()) * 1000 + d.getUTCMilliseconds())
 }
-f();
+
+function updateWeekStart() {
+  weekStartTimeMillis = getWeekStartTimeMillis();
+  weekStart = new Date(weekStartTimeMillis).toISOString()
+  weekPointString = weekStart + ` Points`;
+  weekFlagString = weekStart + ` Flag`;
+  console.log('Week start: ' + weekStart);
+
+  prevWeekStartTimeMillis = [weekStartTimeMillis - milliPerWeek];
+  for (let i = 0; i < 2; i++) {
+    prevWeekStartTimeMillis.push(prevWeekStartTimeMillis[i] - milliPerWeek);
+  }
+  prevWeekStrings = prevWeekStartTimeMillis.map(t => new Date(t).toISOString())
+  prevWeekPointStrings = prevWeekStrings.map(t => t + ` Points`);
+  prevWeekFlagStrings = prevWeekStrings.map(t => t + ` Flag`);
+}
+
+updateWeekStart();
+console.log(prevWeekPointStrings);
+console.log(prevWeekFlagStrings);
+
+
+client.once("ready", async () => {
+  console.log(`Logged in as ${client.user.tag}!`)
+
+  db.collection('admin').doc('points').onSnapshot(snap => {
+    adminPoints = snap.data().ids;
+    console.log(adminPoints);
+  })
+
+  const flagChannel = await client.channels.fetch(/*'603701097420292105'*/'879935833807925258');
+  flagChannel.fetch(true).then(async channel => {
+
+    let all = [];
+    let last_id;
+
+    while (true) {
+      const options = { limit: 100 };
+      if (last_id) {
+        options.before = last_id;
+      }
+
+      const messages = await channel.messages.fetch(options);
+      all.push(...messages);
+      last_id = messages.last().id;
+
+      if (messages.size != 100 || all.length >= 1000) {
+        break;
+      }
+    }
+
+    console.log(all.length);
+
+    all = all.filter(arr => {
+      let m = arr[1];
+      if (m.attachments && m.attachments.size == 1) {
+        const attachment = m.attachments.values().next().value;
+        if (!attachment.contentType.includes('image') ||
+          (m.content.length > 2 && m.mentions.users.size != 1)) {
+          return false;
+        }
+        return true;
+      }
+      return false;
+    })
+
+    console.log(all.length);
+
+    all = all.map((arr, index) => changeFlagPoints(arr[1], index));
+    all = all.filter(p => p);
+    await Promise.all(all);
+
+
+  })
+
+})
+
+
+client.login(process.env.TOKEN);
+
+
+async function changeFlagPoints(m, index, isRemove = false) {
+  let userId = m.author.id;
+  let points = 300;
+
+  let weekPointString1, weekFlagString1;
+  if (m.createdTimestamp > 1631080800000) {
+    return null;
+  }
+
+  if (m.createdTimestamp > weekStartTimeMillis) {
+    weekPointString1 = weekPointString;
+    weekFlagString1 = weekFlagString;
+  } else if (m.createdTimestamp > prevWeekStartTimeMillis[0]) {
+    weekPointString1 = prevWeekPointStrings[0];
+    weekFlagString1 = prevWeekStrings[0]
+  } else {
+    weekPointString1 = prevWeekPointStrings[1];
+    weekFlagString1 = prevWeekStrings[1];
+  }
+
+
+  if (m.content.length > 0) {
+    let content = m.content;
+    if (m.mentions.users.size == 1) {
+      content = m.content.split(' ')[0];
+    }
+
+    if (content.length > 2) {
+      return null;
+    }
+
+    const rank = parseInt(content, 10);
+    if (isNaN(rank)) { return null; }
+    if (rank < 1) {
+      points = 300;
+    } else if (rank == 1) {
+      points = 3000;
+    } else if (rank == 2) {
+      points = 1500;
+    } else if (rank == 3) {
+      points = 1200;
+    } else if (rank == 4) {
+      points = 1050;
+    } else if (rank == 5) {
+      points = 900;
+    } else if (rank >= 6) {
+      points = 600;
+    }
+
+    if (isRemove) {
+      points = -points;
+    }
+
+    if (m.mentions.users.size == 1) {
+      userId = m.mentions.users.firstKey();
+    }
+    const pointsDoc = db.collection('points').doc(userId);
+
+    console.log(index);
+    return pointsDoc.set({
+      [weekPointString1]: FieldValue.increment(points),
+      totalPoints: FieldValue.increment(points),
+      [weekFlagString1]: FieldValue.increment(points),
+    }, { merge: true })
+  }
+  return null;
+}
+
+
+
+
+// const f = async () => {
+//   s = JSON.parse(a);
+//   let p = []
+//   s.forEach(async (id) => {
+//     p.push(db.collection('points').doc(id).update({
+//       totalPoints: 0
+//     }));
+//     console.log(id);
+//   });
+//   await Promise.all(p);
+// }
+// f();
 
