@@ -146,6 +146,30 @@ async function changeFlagPoints(m, isRemove = false) {
   }
 }
 
+function checkData(data) {
+  let total = data.totalPoints;
+  let thisWeek = data[weekPointString] ?? 0;
+  let prev4Week = 0;
+  let prev4WeekCount = 0;
+  prevWeekPointStrings.forEach(s => {
+    if (data[s]) {
+      prev4Week += data[s];
+      prev4WeekCount++;
+    }
+  });
+
+  let imp = (prev4Week + thisWeek) > 60000 ||
+    (total > 180000 && (prev4Week + thisWeek) / prev4WeekCount >= 15000);
+
+  return {
+    total,
+    thisWeek,
+    prev4Week,
+    imp: imp ? '✅' : '❎',
+  }
+}
+
+
 client.once("ready", async () => {
   console.log(`Logged in as ${client.user.tag}!`)
 
@@ -211,16 +235,17 @@ client.on('interactionCreate', async interaction => {
           await interaction.reply('No points recorded for this user.');
         } else {
           const data = userDoc.data();
-          let prev4Week = 0;
-          prevWeekPointStrings.forEach(s => {
-            if (data[s]) {
-              prev4Week += data[s];
-            }
-          })
+          ({
+            total, thisWeek, prev4Week, imp
+          } = checkData(data));
 
           await interaction.reply({
             content: `
-          <@${userDoc.id}>:\nTotal: ${data.totalPoints}\nThis week: ${data[weekPointString]}\nLast 4 weeks(after 8/28/21): ${prev4Week}
+<@${userDoc.id}>:
+Total: ${total}
+This week: ${thisWeek}
+Last 4 weeks(after 8/28/21): ${prev4Week}
+Imp Point Req: ${imp}
           `,
             allowedMentions: { "users": [] }
           });
