@@ -303,30 +303,31 @@ Imp Point Req: ${imp}
         if (!adminPoints[interaction.user.id]) {
           await interaction.reply('You need permission to add points for gpq attendees.');
         } else {
-          const date = new Date(interaction.options.get('date').value);
           let week = null;
-          if (isNaN(date)) {
-            await interaction.reply(`Invalid date`);
-          } else {
-            if (date > weekStartTimeMillis && date - weekStartTimeMillis < milliPerWeek) {
-              week = weekStartTimeMillis;
-            } else if (date > prevWeekStartTimeMillis[0] && date - prevWeekStartTimeMillis[0] < milliPerWeek) {
-              week = prevWeekStartTimeMillis[0]
-            } else if (date > prevWeekStartTimeMillis[1] && date - prevWeekStartTimeMillis[1] < milliPerWeek) {
-              week = prevWeekStartTimeMillis[1]
-            } else if (date > prevWeekStartTimeMillis[2] && date - prevWeekStartTimeMillis[2] < milliPerWeek) {
-              week = prevWeekStartTimeMillis[2]
-            }
-            if (week) {
-              const attendees = [...interaction.options.get('attendees').value.matchAll(/<@!([0-9]+)>/g)].map(a => a[1]);
-              await recordGPQ(attendees, interaction);
-            } else {
-              await interaction.reply({
-                content: `Invalid date (must be in past 3 weeks) `,
-                allowedMentions: { "users": [] }
-              })
-            }
+          // const date = new Date(interaction.options.get('date').value);
+          // if (isNaN(date)) {
+          //   await interaction.reply(`Invalid date`);
+          // } else {
+          const date = Date.now() - 1000 * 86400 * 5;
+          if (date > weekStartTimeMillis && date - weekStartTimeMillis < milliPerWeek) {
+            week = weekStartTimeMillis;
+          } else if (date > prevWeekStartTimeMillis[0] && date - prevWeekStartTimeMillis[0] < milliPerWeek) {
+            week = prevWeekStartTimeMillis[0]
+          } else if (date > prevWeekStartTimeMillis[1] && date - prevWeekStartTimeMillis[1] < milliPerWeek) {
+            week = prevWeekStartTimeMillis[1]
+          } else if (date > prevWeekStartTimeMillis[2] && date - prevWeekStartTimeMillis[2] < milliPerWeek) {
+            week = prevWeekStartTimeMillis[2]
           }
+          if (week) {
+            const attendees = [...interaction.options.get('attendees').value.matchAll(/<@!([0-9]+)>/g)].map(a => a[1]);
+            await recordGPQ(attendees, interaction);
+          } else {
+            await interaction.reply({
+              content: `Invalid date (must be in past 3 weeks) `,
+              allowedMentions: { "users": [] }
+            })
+          }
+          // }
         }
       }
     }

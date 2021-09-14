@@ -96,12 +96,12 @@ const commands = [{
                 name: 'record',
                 description: 'Record GPQ attendees, with date',
                 options: [
-                    {
-                        type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
-                        name: 'date',
-                        required: true,
-                        description: 'Date of GPQ (MM/DD/YY)'
-                    },
+                    // {
+                    //     type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
+                    //     name: 'date',
+                    //     required: true,
+                    //     description: 'Date of GPQ (MM/DD/YY)'
+                    // },
                     {
                         type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
                         name: 'attendees',
