@@ -303,48 +303,86 @@ Imp Point Req: ${imp}
         if (!adminPoints[interaction.user.id]) {
           await interaction.reply('You need permission to add points for gpq attendees.');
         } else {
-          const users = [];
-          for (let i = 1; i <= 6; i++) {
-            const user = interaction.options.get('user' + i);
-            if (user) {
-              users.push(user.user.id);
+          const date = new Date(interaction.options.get('date').value);
+          let week = null;
+          if (isNaN(date)) {
+            await interaction.reply(`Invalid date`);
+          } else {
+            if (date > weekStartTimeMillis && date - weekStartTimeMillis < milliPerWeek) {
+              week = weekStartTimeMillis;
+            } else if (date > prevWeekStartTimeMillis[0] && date - prevWeekStartTimeMillis[0] < milliPerWeek) {
+              week = prevWeekStartTimeMillis[0]
+            } else if (date > prevWeekStartTimeMillis[1] && date - prevWeekStartTimeMillis[1] < milliPerWeek) {
+              week = prevWeekStartTimeMillis[1]
+            } else if (date > prevWeekStartTimeMillis[2] && date - prevWeekStartTimeMillis[2] < milliPerWeek) {
+              week = prevWeekStartTimeMillis[2]
+            }
+            if (week) {
+              const attendees = [...interaction.options.get('attendees').value.matchAll(/<@!([0-9]+)>/g)].map(a => a[1]);
+              await recordGPQ(attendees, interaction);
+            } else {
+              await interaction.reply({
+                content: `Invalid date (must be in past 3 weeks) `,
+                allowedMentions: { "users": [] }
+              })
             }
           }
-
-          let checkedUsers = [];
-          await new Promise((resolve, reject) => {
-            users.forEach(async (userId, index) => {
-              const doc = db.collection('points').doc(userId);
-              const curr = await doc.get();
-              if (curr.exists) {
-                const gpq = curr.data().gpq;
-
-                if (!gpq || gpq.length == 0 || gpq[gpq.length - 1] < weekStart) {
-                  checkedUsers.push(userId)
-                }
-              } else {
-                checkedUsers.push(userId)
-              }
-              if (index === users.length - 1) {
-                resolve();
-              }
-            })
-          });
-          await db.runTransaction(async t => {
-            checkedUsers.forEach(userId => {
-              const doc = db.collection('points').doc(userId);
-              t.set(doc, {
-                [weekPointString]: FieldValue.increment(20000),
-                totalPoints: FieldValue.increment(20000),
-                gpq: FieldValue.arrayUnion(weekStart)
-              }, { merge: true });
-            })
-          })
-          await interaction.reply(`GPQ attendance recorded for <@!${users.join('> <@!')}>.`);
         }
       }
     }
   }
-  // ...
 });
+
+async function recordGPQ(users, interaction) {
+  let checkedUsers = [];
+  await interaction.reply({
+    content: `Adding... `,
+    allowedMentions: { "users": [] }
+  })
+  try {
+    await new Promise((resolve, reject) => {
+      users.forEach(async (userId, index) => {
+        const doc = db.collection('points').doc(userId);
+        const curr = await doc.get();
+        if (curr.exists) {
+          const gpq = curr.data().gpq;
+
+          if (!gpq || gpq.length == 0 || gpq[gpq.length - 1] < weekStart) {
+            checkedUsers.push(userId)
+          }
+        } else {
+          checkedUsers.push(userId)
+        }
+        if (index === users.length - 1) {
+          resolve();
+        }
+      })
+    });
+    await db.runTransaction(async t => {
+      checkedUsers.forEach(userId => {
+        const doc = db.collection('points').doc(userId);
+        t.set(doc, {
+          [weekPointString]: FieldValue.increment(20000),
+          totalPoints: FieldValue.increment(20000),
+          gpq: FieldValue.arrayUnion(weekStart)
+        }, { merge: true });
+      })
+    })
+  } catch (error) {
+    console.log(error);
+    await interaction.editReply({
+      content: `Something went wrong, GPQ not recorded.`,
+      allowedMentions: { "users": [] }
+    })
+  }
+  await interaction.editReply({
+    content: `GPQ attendance recorded for <@!${users.join('> <@!')}>.`,
+    allowedMentions: { "users": [] }
+  })
+}
+
+
+
+
+
 client.login(process.env.TOKEN);

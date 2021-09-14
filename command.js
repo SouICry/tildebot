@@ -94,42 +94,22 @@ const commands = [{
             {
                 type: Discord.Constants.ApplicationCommandOptionTypes.SUB_COMMAND,
                 name: 'record',
-                description: 'Record GPQ attendees. Up to 6 at a time.',
+                description: 'Record GPQ attendees, with date',
                 options: [
                     {
-                        type: Discord.Constants.ApplicationCommandOptionTypes.USER,
-                        name: 'user1',
+                        type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
+                        name: 'date',
                         required: true,
-                        description: 'Attendee'
+                        description: 'Date of GPQ (MM/DD/YY)'
                     },
                     {
-                        type: Discord.Constants.ApplicationCommandOptionTypes.USER,
-                        name: 'user2',
-                        description: 'Attendee'
-                    },
-                    {
-                        type: Discord.Constants.ApplicationCommandOptionTypes.USER,
-                        name: 'user3',
-                        description: 'Attendee'
-                    },
-                    {
-                        type: Discord.Constants.ApplicationCommandOptionTypes.USER,
-                        name: 'user4',
-                        description: 'Attendee'
-                    },
-                    {
-                        type: Discord.Constants.ApplicationCommandOptionTypes.USER,
-                        name: 'user5',
-                        description: 'Attendee'
-                    },
-                    {
-                        type: Discord.Constants.ApplicationCommandOptionTypes.USER,
-                        name: 'user6',
-                        description: 'Attendee'
+                        type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
+                        name: 'attendees',
+                        required: true,
+                        description: 'Tag all attendee discords'
                     },
                 ]
-            }
-
+            },
         ]
     }]
 }];
