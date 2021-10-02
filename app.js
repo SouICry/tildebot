@@ -320,7 +320,7 @@ Imp Point Req: ${imp}
             }
             if (week) {
               const attendees = [...interaction.options.get('attendees').value.matchAll(/<@!([0-9]+)>/g)].map(a => a[1]);
-              await recordGPQ(attendees, interaction);
+              await recordGPQ(attendees, interaction, week);
             } else {
               await interaction.reply({
                 content: `Invalid date (must be in past 3 weeks) `,
@@ -334,7 +334,7 @@ Imp Point Req: ${imp}
   }
 });
 
-async function recordGPQ(users, interaction) {
+async function recordGPQ(users, interaction, week = weekStart) {
   let checkedUsers = [];
   await interaction.reply({
     content: `Adding... `,
@@ -348,7 +348,7 @@ async function recordGPQ(users, interaction) {
         if (curr.exists) {
           const gpq = curr.data().gpq;
 
-          if (!gpq || gpq.length == 0 || gpq[gpq.length - 1] < weekStart) {
+          if (!gpq || gpq.length == 0 || gpq[gpq.length - 1] < week) {
             checkedUsers.push(userId)
           }
         } else {
@@ -365,7 +365,7 @@ async function recordGPQ(users, interaction) {
         t.set(doc, {
           [weekPointString]: FieldValue.increment(20000),
           totalPoints: FieldValue.increment(20000),
-          gpq: FieldValue.arrayUnion(weekStart)
+          gpq: FieldValue.arrayUnion(week)
         }, { merge: true });
       })
     })
