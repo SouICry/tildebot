@@ -385,7 +385,7 @@ async function recordGPQ(users, interaction, week = weekStart, weekPointStr = we
     })
   }
   await interaction.editReply({
-    content: `GPQ attendance recorded for <@!${users.join('> <@!')}>.`,
+    content: `GPQ attendance recorded for week starting on ${week} for <@!${users.join('> <@!')}>.`,
     allowedMentions: { "users": [] }
   })
 }
