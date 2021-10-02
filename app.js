@@ -30,7 +30,7 @@ function getWeekStartTimeMillis() {
     d.getUTCMinutes()) * 60 + d.getUTCSeconds()) * 1000 + d.getUTCMilliseconds())
 }
 
-let weekStartTimeMillis, weekStart, prevWeekStartTimeMillis, prevWeekStrings, prevWeekPointStrings,
+let weekStartTimeMillis, weekStart, prevWeekStarts, prevWeekStartTimeMillis, prevWeekStrings, prevWeekPointStrings,
   weekPointString;
 
 function updateWeekStart() {
@@ -40,8 +40,10 @@ function updateWeekStart() {
   console.log('Week start: ' + weekStart);
 
   prevWeekStartTimeMillis = [weekStartTimeMillis - milliPerWeek];
+  prevWeekStarts = [new Date(weekStartTimeMillis - milliPerWeek).toISOString()]
   for (let i = 0; i < 2; i++) {
     prevWeekStartTimeMillis.push(prevWeekStartTimeMillis[i] - milliPerWeek);
+    prevWeekStarts.push(new Date(prevWeekStartTimeMillis[i] - milliPerWeek).toISOString());
   }
   prevWeekStrings = prevWeekStartTimeMillis.map(t => new Date(t).toISOString())
   prevWeekPointStrings = prevWeekStrings.map(t => t + ` Points`);
@@ -304,23 +306,29 @@ Imp Point Req: ${imp}
           await interaction.reply('You need permission to add points for gpq attendees.');
         } else {
           let week = null;
+          let weekPointStr = null;
           const date = new Date(interaction.options.get('date').value);
           if (isNaN(date)) {
             await interaction.reply(`Invalid date`);
           } else {
             // const date = Date.now() - 1000 * 86400 * 5;
             if (date > weekStartTimeMillis && date - weekStartTimeMillis < milliPerWeek) {
-              week = weekStartTimeMillis;
+              week = weekStart;
+              weekPointStr = weekPointString;
             } else if (date > prevWeekStartTimeMillis[0] && date - prevWeekStartTimeMillis[0] < milliPerWeek) {
-              week = prevWeekStartTimeMillis[0]
+              week = prevWeekStarts[0]
+              weekPointStr = prevWeekPointStrings[0];
             } else if (date > prevWeekStartTimeMillis[1] && date - prevWeekStartTimeMillis[1] < milliPerWeek) {
-              week = prevWeekStartTimeMillis[1]
+              week = prevWeekStarts[1]
+              weekPointStr = prevWeekPointStrings[0];
             } else if (date > prevWeekStartTimeMillis[2] && date - prevWeekStartTimeMillis[2] < milliPerWeek) {
-              week = prevWeekStartTimeMillis[2]
+              week = prevWeekStarts[2]
+              weekPointStr = prevWeekPointStrings[0];
             }
+
             if (week) {
               const attendees = [...interaction.options.get('attendees').value.matchAll(/<@!([0-9]+)>/g)].map(a => a[1]);
-              await recordGPQ(attendees, interaction, week);
+              await recordGPQ(attendees, interaction, week, weekPointStr);
             } else {
               await interaction.reply({
                 content: `Invalid date (must be in past 3 weeks) `,
@@ -334,7 +342,7 @@ Imp Point Req: ${imp}
   }
 });
 
-async function recordGPQ(users, interaction, week = weekStart) {
+async function recordGPQ(users, interaction, week = weekStart, weekPointStr = weekPointString) {
   let checkedUsers = [];
   await interaction.reply({
     content: `Adding... `,
@@ -348,7 +356,7 @@ async function recordGPQ(users, interaction, week = weekStart) {
         if (curr.exists) {
           const gpq = curr.data().gpq;
 
-          if (!gpq || gpq.length == 0 || gpq[gpq.length - 1] < week) {
+          if (!gpq || gpq.length == 0 || !gpq.includes(week)) {
             checkedUsers.push(userId)
           }
         } else {
@@ -363,7 +371,7 @@ async function recordGPQ(users, interaction, week = weekStart) {
       checkedUsers.forEach(userId => {
         const doc = db.collection('points').doc(userId);
         t.set(doc, {
-          [weekPointString]: FieldValue.increment(20000),
+          [weekPointStr]: FieldValue.increment(20000),
           totalPoints: FieldValue.increment(20000),
           gpq: FieldValue.arrayUnion(week)
         }, { merge: true });
