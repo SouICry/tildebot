@@ -276,7 +276,7 @@ Imp Point Req: ${imp}
           const userDoc = db.collection('points').doc(userId);
           const points = interaction.options.get('amount').value;
           await userDoc.set({
-            [weekPointString]: FieldValue.increment(points),
+            // [weekPointString]: FieldValue.increment(points),
             totalPoints: FieldValue.increment(points),
           }, { merge: true });
           await interaction.reply(points + ` points added for <@!${userId}>.`);
