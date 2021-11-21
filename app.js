@@ -194,7 +194,7 @@ async function changeGpqPoints(m, isRemove = false) {
       newGpq: gpqDat
     }, { merge: true });
   }
-  if (!isRemove) {
+  if (!isRemove && !doNothing) {
     m.react('✅');
   }
 }
