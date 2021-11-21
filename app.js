@@ -107,7 +107,7 @@ async function changeFlagPoints(m, isRemove = false) {
             // Same or higher, process
             if (points >= flag[week]) {
               if (isRemove && points === flag[week]) {
-                changePoints = -points;
+                changePoints = -points - 10000;
                 delete flag[week];
               } else {
                 changePoints = points - flag[week];
@@ -117,8 +117,8 @@ async function changeFlagPoints(m, isRemove = false) {
             // Otherwise dont need to change anything
           } else {
             // First post of week
-            flag[week] = points;
-            changePoints = points;
+            flag[week] = points + 10000;
+            changePoints = points + 10000;
           }
           resolve([flag, changePoints]);
           return;
@@ -126,8 +126,8 @@ async function changeFlagPoints(m, isRemove = false) {
       }
       // First ever flag post
       resolve([{
-        [week]: points
-      }, points])
+        [week]: points + 10000
+      }, points + 10000])
     });
 
     await db.collection('points').doc(userId).set({
