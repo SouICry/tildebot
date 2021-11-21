@@ -166,8 +166,12 @@ async function changeGpqPoints(m, isRemove = false) {
             doNothing = true
           }
         } else {
-          // First post of week
-          newGpq[week] = points;
+          if (isRemove) {
+            doNothing = true;
+          } else {
+            // First post of week
+            newGpq[week] = points;
+          }
         }
         resolve([newGpq, doNothing]);
         return;
