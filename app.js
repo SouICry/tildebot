@@ -76,6 +76,7 @@ const ranks = new Set([1000, 800, 650, 550, 450, 400, 350, 300, 250, 200, 100]);
 
 
 async function changeFlagPoints(m, isRemove = false) {
+  console.log(isRemove);
   const week = weekStart;
   let userId = m.author.id;
   let points = 300;
@@ -102,6 +103,7 @@ async function changeFlagPoints(m, isRemove = false) {
       let changePoints = 0;
       if (curr.exists) {
         const flag = curr.data().flag;
+        console.log(flag);
         if (flag) {
           if (flag[week]) {
             // Same or higher, process
@@ -117,7 +119,7 @@ async function changeFlagPoints(m, isRemove = false) {
             // Otherwise dont need to change anything
           } else {
             // First post of week
-            flag[week] = points + 10000;
+            flag[week] = points;
             changePoints = points + 10000;
           }
           resolve([flag, changePoints]);
@@ -126,7 +128,7 @@ async function changeFlagPoints(m, isRemove = false) {
       }
       // First ever flag post
       resolve([{
-        [week]: points + 10000
+        [week]: points
       }, points + 10000])
     });
 
@@ -233,8 +235,6 @@ client.once("ready", async () => {
 
   const flagChannel = await client.channels.fetch(/*'603701097420292105'*/'879935833807925258');
   flagChannel.fetch(true);
-  const gpqChannel = await client.channels.fetch(/*'611690843278934017'*/'911789923684741141');
-  gpqChannel.fetch(true);
   const flagCollector = flagChannel.createMessageCollector();
   flagCollector.on('collect', async m => {
     if (m.attachments.size == 1) {
@@ -245,6 +245,8 @@ client.once("ready", async () => {
       changeFlagPoints(m);
     }
   });
+  const gpqChannel = await client.channels.fetch(/*'611690843278934017'*/'911789923684741141');
+  gpqChannel.fetch(true);
   const gpqCollector = gpqChannel.createMessageCollector();
   gpqCollector.on('collect', async m => {
     if (m.attachments.size == 1) {
@@ -258,6 +260,7 @@ client.once("ready", async () => {
 })
 
 client.on('messageDelete', async m => {
+  console.log('del');
   if (m.channel.id == /*'603701097420292105'*/'879935833807925258') {
     if (m.attachments.size == 1) {
       const reaction = m.reactions.resolve('✅');
