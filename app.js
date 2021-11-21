@@ -47,7 +47,12 @@ function updateWeekStart() {
   }
   prevWeekStrings = prevWeekStartTimeMillis.map(t => new Date(t).toISOString())
   prevWeekPointStrings = prevWeekStrings.map(t => t + ` Points`);
+
+  console.log(weekStart);
+  console.log(prevWeekStrings);
 }
+
+
 
 updateWeekStart();
 setTimeout(() => {
@@ -67,8 +72,11 @@ setTimeout(() => {
 
 let adminPoints = {};
 
+const ranks = new Set([1000, 800, 650, 550, 450, 400, 350, 300, 250, 200, 100]);
+
 
 async function changeFlagPoints(m, isRemove = false) {
+  const week = weekStart;
   let userId = m.author.id;
   let points = 300;
   if (m.content.length > 0) {
@@ -77,74 +85,113 @@ async function changeFlagPoints(m, isRemove = false) {
       content = m.content.split(' ')[0];
     }
 
-    if (content.length > 2) {
-      return;
-    }
-
     const rank = parseInt(content, 10);
     if (isNaN(rank)) { return; }
-    if (rank < 1) {
-      points = 300;
-      if (!isRemove) {
-        m.react('0️⃣');
-      }
-    } else if (rank == 1) {
-      points = 3000;
-      if (!isRemove) {
-        m.react('1️⃣');
-      }
-    } else if (rank == 2) {
-      points = 1500;
-      if (!isRemove) {
-        m.react('2️⃣');
-      }
-    } else if (rank == 3) {
-      points = 1200;
-      if (!isRemove) {
-        m.react('3️⃣');
-      }
-    } else if (rank == 4) {
-      points = 1050;
-      if (!isRemove) {
-        m.react('4️⃣');
-      }
-    } else if (rank == 5) {
-      points = 900;
-      if (!isRemove) {
-        m.react('5️⃣');
-      }
-    } else if (rank >= 6) {
-      points = 600;
-      if (!isRemove) {
-        m.react('6️⃣');
-      }
+    if (!ranks.has(rank)) {
+      return;
     }
-
-    if (isRemove) {
-      points = -points;
-    }
+    points = rank * 10;
 
     if (m.mentions.users.size == 1) {
       userId = m.mentions.users.firstKey();
     }
-    const pointsDoc = db.collection('points').doc(userId);
 
-    await Promise.all([
-      pointsDoc.set({
-        [weekPointString]: FieldValue.increment(points),
-        totalPoints: FieldValue.increment(points),
-      }, { merge: true }),
-      (isRemove ?
-        pointsDoc.collection('flag').doc(m.id).delete() :
-        pointsDoc.collection('flag').doc(m.id).set({
-          rank: rank,
-          week: weekStart,
-          timestamp: FieldValue.serverTimestamp()
-        }, { merge: true }))
-    ]);
+    const [flagDat, changePoints] = await new Promise(async (resolve) => {
+      const doc = db.collection('points').doc(userId);
+      const curr = await doc.get();
+      let changePoints = 0;
+      if (curr.exists) {
+        const flag = curr.data().flag;
+        if (flag) {
+          if (flag[week]) {
+            // Same or higher, process
+            if (points >= flag[week]) {
+              if (isRemove && points === flag[week]) {
+                changePoints = -points;
+                delete flag[week];
+              } else {
+                changePoints = points - flag[week];
+                flag[week] = points;
+              }
+            }
+            // Otherwise dont need to change anything
+          } else {
+            // First post of week
+            flag[week] = points;
+            changePoints = points;
+          }
+          resolve([flag, changePoints]);
+          return;
+        }
+      }
+      // First ever flag post
+      resolve([{
+        [week]: points
+      }, points])
+    });
+
+    await db.collection('points').doc(userId).set({
+      [weekPointString]: FieldValue.increment(changePoints),
+      totalPoints: FieldValue.increment(changePoints),
+      flag: flagDat
+    }, { merge: true });
+
     if (!isRemove) {
       m.react('✅');
     }
+  }
+}
+
+
+async function changeGpqPoints(m, isRemove = false) {
+  const week = weekStart;
+  let userId = m.author.id;
+  let points = 10000;
+
+  if (m.mentions.users.size == 1) {
+    userId = m.mentions.users.firstKey();
+  }
+
+  const [gpqDat, doNothing] = await new Promise(async (resolve) => {
+    const doc = db.collection('points').doc(userId);
+    const curr = await doc.get();
+    let doNothing = false;
+    if (curr.exists) {
+      const newGpq = curr.data().newGpq;
+      if (newGpq) {
+        if (newGpq[week]) {
+          if (isRemove) {
+            delete newGpq[week];
+          } else {
+            doNothing = true
+          }
+        } else {
+          // First post of week
+          newGpq[week] = points;
+        }
+        resolve([newGpq, doNothing]);
+        return;
+      }
+    }
+    // First ever flag post
+    resolve([{
+      [week]: points
+    }, false])
+  });
+
+  if (!doNothing) {
+    if (isRemove) {
+      points = -points;
+    }
+
+    await db.collection('points').doc(userId).set({
+      [weekPointString]: FieldValue.increment(points),
+      totalPoints: FieldValue.increment(points),
+      newGpq: gpqDat
+    }, { merge: true });
+  }
+  if (!isRemove) {
+    m.react('✅');
   }
 }
 
@@ -180,23 +227,34 @@ client.once("ready", async () => {
     console.log(adminPoints);
   })
 
-  const flagChannel = await client.channels.fetch(/*'603701097420292105'*/'879935833807925258');
+  const flagChannel = await client.channels.fetch('603701097420292105'/*'879935833807925258'*/);
   flagChannel.fetch(true);
+  const gpqChannel = await client.channels.fetch('611690843278934017'/*'911789923684741141'*/);
+  gpqChannel.fetch(true);
   const flagCollector = flagChannel.createMessageCollector();
   flagCollector.on('collect', async m => {
     if (m.attachments.size == 1) {
       const attachment = m.attachments.values().next().value;
-      if (!attachment.contentType.includes('image') ||
-        (m.content.length > 2 && m.mentions.users.size != 1)) {
+      if (!attachment.contentType.includes('image')) {
         return;
       }
       changeFlagPoints(m);
     }
   });
+  const gpqCollector = gpqChannel.createMessageCollector();
+  gpqCollector.on('collect', async m => {
+    if (m.attachments.size == 1) {
+      const attachment = m.attachments.values().next().value;
+      if (!attachment.contentType.includes('image')) {
+        return;
+      }
+      changeGpqPoints(m);
+    }
+  });
 })
 
 client.on('messageDelete', async m => {
-  if (m.channel.id == '879935833807925258') {
+  if (m.channel.id == '603701097420292105'/*'879935833807925258'*/) {
     if (m.attachments.size == 1) {
       const reaction = m.reactions.resolve('✅');
       if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
@@ -204,18 +262,41 @@ client.on('messageDelete', async m => {
       }
     }
   }
+
+  if (m.channel.id == '611690843278934017'/*'911789923684741141'*/) {
+    if (m.attachments.size == 1) {
+      const reaction = m.reactions.resolve('✅');
+      if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
+        changeGpqPoints(m, true);
+      }
+    }
+  }
 });
 
 client.on('messageUpdate', async (oldMessage, newMessage) => {
-  if (oldMessage.channel.id == '879935833807925258') {
+  if (oldMessage.channel.id == '603701097420292105'/*'879935833807925258'*/) {
     if (oldMessage.attachments.size == 1) {
       const reaction = oldMessage.reactions.resolve('✅');
       if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
-        if (Date.now() - oldMessage.createdTimestamp < 86400000) {
+        if (Date.now() - oldMessage.createdTimestamp < 604800000) {
           changeFlagPoints(oldMessage, true);
           await newMessage.reactions.removeAll();
           if (newMessage.attachments.size == 1) {
             changeFlagPoints(newMessage);
+          }
+        }
+      }
+    }
+  }
+  if (oldMessage.channel.id == '611690843278934017'/*'911789923684741141'*/) {
+    if (oldMessage.attachments.size == 1) {
+      const reaction = oldMessage.reactions.resolve('✅');
+      if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
+        if (Date.now() - oldMessage.createdTimestamp < 604800000) {
+          changeGpqPoints(oldMessage, true);
+          await newMessage.reactions.removeAll();
+          if (newMessage.attachments.size == 1) {
+            changeGpqPoints(newMessage);
           }
         }
       }
@@ -246,7 +327,7 @@ client.on('interactionCreate', async interaction => {
 <@${userDoc.id}>:
 Total: ${total}
 This week: ${thisWeek}
-Last 4 weeks(after 8/28/21): ${prev4Week}
+Last 4 weeks: ${prev4Week}
 Imp Point Req: ${imp}
           `,
             allowedMentions: { "users": [] }
