@@ -72,7 +72,7 @@ setTimeout(() => {
 
 let adminPoints = {};
 
-const ranks = new Set([1000, 800, 650, 550, 450, 400, 350, 300, 250, 200, 100]);
+const ranks = new Set([1000, 800, 650, 550, 450, 400, 350, 300, 250, 200, 100, 0]);
 
 
 async function changeFlagPoints(m, isRemove = false) {
@@ -86,8 +86,8 @@ async function changeFlagPoints(m, isRemove = false) {
       content = m.content.split(' ')[0];
     }
 
-    const rank = parseInt(content, 10);
-    if (isNaN(rank)) { return; }
+    let rank = parseInt(content, 10);
+    if (isNaN(rank)) { rank = 0; }
     if (!ranks.has(rank)) {
       return;
     }
@@ -213,7 +213,7 @@ function checkData(data) {
     }
   });
 
-  let imp = (prev4Week + thisWeek) > 60000 ||
+  let imp = (prev4Week + thisWeek) > 50000 ||
     (total > 180000 && (prev4Week + thisWeek) / prev4WeekCount >= 15000);
 
   return {
