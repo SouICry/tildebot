@@ -109,7 +109,7 @@ async function changeFlagPoints(m, isRemove = false) {
             // Same or higher, process
             if (points >= flag[week]) {
               if (isRemove && points === flag[week]) {
-                changePoints = -points - 10000;
+                changePoints = -points - 2500;
                 delete flag[week];
               } else {
                 changePoints = points - flag[week];
@@ -120,7 +120,7 @@ async function changeFlagPoints(m, isRemove = false) {
           } else {
             // First post of week
             flag[week] = points;
-            changePoints = points + 10000;
+            changePoints = points + 2500;
           }
           resolve([flag, changePoints]);
           return;
@@ -129,7 +129,7 @@ async function changeFlagPoints(m, isRemove = false) {
       // First ever flag post
       resolve([{
         [week]: points
-      }, points + 10000])
+      }, points + 2500])
     });
 
     await db.collection('points').doc(userId).set({
@@ -213,7 +213,7 @@ function checkData(data) {
     }
   });
 
-  let imp = (prev4Week + thisWeek) > 40000 ||
+  let imp = (prev4Week + thisWeek) > 45000 ||
     (total > 180000 && (prev4Week + thisWeek) / prev4WeekCount >= 15000);
 
   return {
@@ -335,7 +335,7 @@ client.on('interactionCreate', async interaction => {
 Total: ${total}
 This week: ${thisWeek}
 Last 4 weeks: ${prev4Week}
-Imp Point Req: ${imp}
+Imp Point Req (not time): ${imp}
           `,
             allowedMentions: { "users": [] }
           });
