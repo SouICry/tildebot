@@ -213,7 +213,7 @@ function checkData(data) {
     }
   });
 
-  let imp = (prev4Week + thisWeek) > 50000 ||
+  let imp = (prev4Week + thisWeek) > 40000 ||
     (total > 180000 && (prev4Week + thisWeek) / prev4WeekCount >= 15000);
 
   return {
