@@ -41,7 +41,7 @@ function updateWeekStart() {
 
   prevWeekStartTimeMillis = [weekStartTimeMillis - milliPerWeek];
   prevWeekStarts = [new Date(weekStartTimeMillis - milliPerWeek).toISOString()]
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 3; i++) { // 3 plus the 1 up top
     prevWeekStartTimeMillis.push(prevWeekStartTimeMillis[i] - milliPerWeek);
     prevWeekStarts.push(new Date(prevWeekStartTimeMillis[i] - milliPerWeek).toISOString());
   }
