@@ -121,7 +121,7 @@ const rest = new REST({ version: '9' }).setToken(process.env.TOKEN);
         console.log('Started refreshing application (/) commands.');
 
         await rest.put(
-            Routes.applicationGuildCommands('877028314357825546', '376166026099818499'/*'376166026099818499'*/),
+            Routes.applicationGuildCommands('877028314357825546', '1187447627365744660'/* bot id, server id. run this file to load commands  '376166026099818499'*//*'376166026099818499'*/),
             { body: commands },
         );
 
