@@ -233,7 +233,7 @@ client.once("ready", async () => {
     console.log(adminPoints);
   })
 
-  const flagChannel = await client.channels.fetch(/*'603701097420292105'*/'879935833807925258');
+  const flagChannel = await client.channels.fetch(/*'603701097420292105'*//*'879935833807925258'*/'1187462377256517712'); // flag
   flagChannel.fetch(true);
   const flagCollector = flagChannel.createMessageCollector();
   flagCollector.on('collect', async m => {
@@ -245,7 +245,7 @@ client.once("ready", async () => {
       changeFlagPoints(m);
     }
   });
-  const gpqChannel = await client.channels.fetch(/*'611690843278934017'*/'911789923684741141');
+  const gpqChannel = await client.channels.fetch(/*'611690843278934017'*//*'911789923684741141'*/'1187462140416753664' ); // gpq
   gpqChannel.fetch(true);
   const gpqCollector = gpqChannel.createMessageCollector();
   gpqCollector.on('collect', async m => {
@@ -261,7 +261,7 @@ client.once("ready", async () => {
 
 client.on('messageDelete', async m => {
   console.log('del');
-  if (m.channel.id == /*'603701097420292105'*/'879935833807925258') {
+  if (m.channel.id == /*'603701097420292105'*//*'879935833807925258'*/'1187462377256517712') {
     if (m.attachments.size == 1) {
       const reaction = m.reactions.resolve('✅');
       if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
@@ -270,7 +270,7 @@ client.on('messageDelete', async m => {
     }
   }
 
-  if (m.channel.id == /*'611690843278934017'*/'911789923684741141') {
+  if (m.channel.id == /*'611690843278934017'*//*'911789923684741141'*/'1187462140416753664') {
     if (m.attachments.size == 1) {
       const reaction = m.reactions.resolve('✅');
       if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
@@ -281,7 +281,7 @@ client.on('messageDelete', async m => {
 });
 
 client.on('messageUpdate', async (oldMessage, newMessage) => {
-  if (oldMessage.channel.id == /*'603701097420292105'*/'879935833807925258') {
+  if (oldMessage.channel.id == /*'603701097420292105'*//*'879935833807925258'*/'1187462377256517712') {
     if (oldMessage.attachments.size == 1) {
       const reaction = oldMessage.reactions.resolve('✅');
       if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
@@ -295,7 +295,7 @@ client.on('messageUpdate', async (oldMessage, newMessage) => {
       }
     }
   }
-  if (oldMessage.channel.id == /*'611690843278934017'*/'911789923684741141') {
+  if (oldMessage.channel.id == /*'611690843278934017'*//*'911789923684741141'*/'1187462140416753664') {
     if (oldMessage.attachments.size == 1) {
       const reaction = oldMessage.reactions.resolve('✅');
       if (reaction != null && reaction.users.resolve('877028314357825546') != null) {
