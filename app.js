@@ -37,23 +37,49 @@ function getWeekStartTimeMillis() {
     d.getUTCMinutes()) * 60 + d.getUTCSeconds()) * 1000 + d.getUTCMilliseconds())
 }
 
-let weekStartTimeMillis, weekStart, prevWeekStarts, prevWeekStartTimeMillis, prevWeekStrings, prevWeekPointStrings,
-  weekPointString;
+
+function getOldMondayWeekStartTimeMillis() {
+  const d = new Date();
+  let day = d.getUTCDay();
+  if (day == 0) {
+    day = 7;
+  }
+
+  // // set to thursday from monday
+  // if (day <= 3) {
+  //   day += 7; // 4,5,6,7,8,9,10 for thurs thru wed
+  // }
+  // day -= 3; // 1-7 for thurs thru wed
+
+  day--;
+  return d.getTime() - ((((day * 24 + d.getUTCHours()) * 60 +
+    d.getUTCMinutes()) * 60 + d.getUTCSeconds()) * 1000 + d.getUTCMilliseconds())
+}
+
+
+let weekStartTimeMillis, oldWeekStartTimeMillis, weekStart, prevWeekStarts, prevWeekStartTimeMillis, prevWeekStrings, prevOldWeekStrings,
+  prevWeekPointStrings, prevOldWeekPointStrings,
+  prevOldWeekStartTimeMillis, weekPointString;
 
 function updateWeekStart() {
   weekStartTimeMillis = getWeekStartTimeMillis();
+  oldWeekStartTimeMillis = getOldMondayWeekStartTimeMillis();
   weekStart = new Date(weekStartTimeMillis).toISOString()
   weekPointString = weekStart + ` Points`;
   console.log('Week start: ' + weekStart);
 
   prevWeekStartTimeMillis = [weekStartTimeMillis - milliPerWeek];
+  prevOldWeekStartTimeMillis = [oldWeekStartTimeMillis - milliPerWeek];
   prevWeekStarts = [new Date(weekStartTimeMillis - milliPerWeek).toISOString()]
   for (let i = 0; i < 3; i++) { // 3 plus the 1 up top
     prevWeekStartTimeMillis.push(prevWeekStartTimeMillis[i] - milliPerWeek);
+    prevOldWeekStartTimeMillis.push(prevOldWeekStartTimeMillis[i] - milliPerWeek);
     prevWeekStarts.push(new Date(prevWeekStartTimeMillis[i] - milliPerWeek).toISOString());
   }
   prevWeekStrings = prevWeekStartTimeMillis.map(t => new Date(t).toISOString())
+  prevOldWeekStrings = prevOldWeekStartTimeMillis.map(t => new Date(t).toISOString())
   prevWeekPointStrings = prevWeekStrings.map(t => t + ` Points`);
+  prevOldWeekPointStrings = prevOldWeekStrings.map(t => t + ` Points`);
 
   console.log(weekStart);
   console.log(prevWeekStrings);
@@ -213,12 +239,20 @@ function checkData(data) {
   let thisWeek = data[weekPointString] ?? 0;
   let prev4Week = 0;
   let prev4WeekCount = 0;
+  let prevOld4WeekCount = 0;
   prevWeekPointStrings.forEach(s => {
     if (data[s]) {
       prev4Week += data[s];
       prev4WeekCount++;
     }
   });
+  prevOldWeekPointStrings.forEach(s => {
+    if (data[s]) {
+      prev4Week += data[s];
+      prevOld4WeekCount++;
+    }
+  });
+  prev4WeekCount = Math.max(prev4WeekCount, prevOld4WeekCount);
 
   let imp = (prev4Week + thisWeek) > 40000 ||
     (total > 135000 && (prev4Week + thisWeek) / prev4WeekCount >= 15000);
