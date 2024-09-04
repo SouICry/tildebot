@@ -25,6 +25,13 @@ function getWeekStartTimeMillis() {
   if (day == 0) {
     day = 7;
   }
+
+  // set to thursday from monday
+  if (day <= 3) {
+    day += 7; // 4,5,6,7,8,9,10 for thurs thru wed
+  }
+  day -= 3; // 1-7 for thurs thru wed
+
   day--;
   return d.getTime() - ((((day * 24 + d.getUTCHours()) * 60 +
     d.getUTCMinutes()) * 60 + d.getUTCSeconds()) * 1000 + d.getUTCMilliseconds())
@@ -245,7 +252,7 @@ client.once("ready", async () => {
       changeFlagPoints(m);
     }
   });
-  const gpqChannel = await client.channels.fetch(/*'611690843278934017'*//*'911789923684741141'*/'1187462140416753664' ); // gpq
+  const gpqChannel = await client.channels.fetch(/*'611690843278934017'*//*'911789923684741141'*/'1187462140416753664'); // gpq
   gpqChannel.fetch(true);
   const gpqCollector = gpqChannel.createMessageCollector();
   gpqCollector.on('collect', async m => {
