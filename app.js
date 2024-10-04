@@ -113,7 +113,9 @@ async function changeFlagPoints(m, isRemove = false) {
   console.log(isRemove);
   const week = weekStart;
   console.log(m.author);
-  let userId = m.author.id;
+  //let userId = m.author.id;
+  let userId = 470626670135738368;
+
   let points = 300;
   if (m.content.length > 0) {
     console.log('a')
