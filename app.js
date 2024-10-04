@@ -141,6 +141,7 @@ async function changeFlagPoints(m, isRemove = false) {
       console.log('c')
       if (curr.exists) {
         const flag = curr.data().flag;
+        console.log('flag');
         console.log(flag);
         if (flag) {
           if (flag[week]) {
