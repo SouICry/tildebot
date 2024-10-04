@@ -207,11 +207,15 @@ async function changeFlagPoints(m, isRemove = false) {
   if (m.mentions.users.size == 1) {
     content = m.content.split(' ')[0];
   }
+  console.log('aa')
 
 
   let rank = parseInt(content, 10);
+  console.log(content);
+  console.log(rank);
   if (isNaN(rank)) { rank = 0; }
   if (!ranks.has(rank)) {
+    console.log('ab')
     return;
   }
   points = rank * 10 + 2500;
