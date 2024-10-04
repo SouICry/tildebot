@@ -109,6 +109,7 @@ const ranks = new Set([1000, 800, 650, 550, 450, 400, 350, 300, 250, 200, 100, 0
 
 
 async function changeFlagPoints(m, isRemove = false) {
+  console.log('changeFlagPoints')
   console.log(isRemove);
   const week = weekStart;
   let userId = m.author.id;
@@ -275,9 +276,10 @@ client.once("ready", async () => {
   })
 
   const flagChannel = await client.channels.fetch(/*'603701097420292105'*//*'879935833807925258'*/'1187462377256517712'); // flag
-  flagChannel.fetch(true);
+  flagChannel.fetch(true); 1187462377256517712
   const flagCollector = flagChannel.createMessageCollector();
   flagCollector.on('collect', async m => {
+    console.log('Flag channel collect')
     if (m.attachments.size == 1) {
       const attachment = m.attachments.values().next().value;
       if (!attachment.contentType.includes('image')) {
