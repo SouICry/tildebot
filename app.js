@@ -108,172 +108,171 @@ let adminPoints = {};
 // const ranks = new Set([1000, 800, 650, 550, 450, 400, 350, 300, 250, 200, 100, 0]);
 
 
-// async function changeFlagPoints(m, isRemove = false) {
-//   console.log('changeFlagPoints')
-//   console.log(isRemove);
-//   const week = weekStart;
-//   console.log(m.author);
-//   //let userId = m.author.id;
-//   let userId = '470626670135738368';
-
-//   let points = 300;
-//   if (m.content.length > 0) {
-//     console.log('a')
-//     let content = m.content;
-//     if (m.mentions.users.size == 1) {
-//       content = m.content.split(' ')[0];
-//     }
-
-//     let rank = parseInt(content, 10);
-//     if (isNaN(rank)) { rank = 0; }
-//     if (!ranks.has(rank)) {
-//       return;
-//     }
-//     points = rank * 10;
-
-//     if (m.mentions.users.size == 1) {
-//       userId = m.mentions.users.firstKey();
-//     }
-
-//     console.log('b')
-//     const [flagDat, changePoints] = await new Promise(async (resolve) => {
-//       const doc = db.collection('points').doc(userId);
-//       const curr = await doc.get();
-//       let changePoints = 0;
-//       console.log('c')
-//       if (curr.exists) {
-//         const flag = curr.data().flag;
-//         console.log('flag');
-//         console.log(flag);
-//         if (flag) {
-//           if (flag[week]) {
-//             // Same or higher, process
-//             if (points >= flag[week]) {
-//               if (isRemove && points === flag[week]) {
-//                 changePoints = -points - 2500;
-//                 delete flag[week];
-//               } else {
-//                 changePoints = points - flag[week];
-//                 flag[week] = points;
-//               }
-//             }
-//             // Otherwise dont need to change anything
-//           } else {
-//             // First post of week
-//             flag[week] = points;
-//             changePoints = points + 2500;
-//           }
-//           resolve([flag, changePoints]);
-//           return;
-//         }
-//       }
-//       // First ever flag post
-//       resolve([{
-//         [week]: points
-//       }, points + 2500])
-//     });
-
-//     console.log('d')
-//     await db.collection('points').doc(userId).set({
-//       [weekPointString]: FieldValue.increment(changePoints),
-//       totalPoints: FieldValue.increment(changePoints),
-//       flag: flagDat
-//     }, { merge: true });
-
-//     console.log('e')
-//     if (!isRemove) {
-//       m.react('✅');
-//     }
-//     console.log('f')
-//   }
-// }
-
-
 async function changeFlagPoints(m, isRemove = false) {
-  console.log('\nchangeFlagPoints')
-  console.log(m.author);
+  console.log('changeFlagPoints')
+  console.log(isRemove);
   const week = weekStart;
+  console.log(m.author);
   let userId = m.author.id;
 
+  let points = 300;
+  if (m.content.length > 0) {
+    console.log('a')
+    let content = m.content;
+    if (m.mentions.users.size == 1) {
+      content = m.content.split(' ')[0];
+    }
 
-  if (m.content.length == 0) {
-    console.log('no point value posted')
-    return
-  }
+    let rank = parseInt(content, 10);
+    if (isNaN(rank)) { rank = 0; }
+    // if (!ranks.has(rank)) {
+    //   return;
+    // }
+    points = rank * 10;
 
-  console.log('a')
+    if (m.mentions.users.size == 1) {
+      userId = m.mentions.users.firstKey();
+    }
 
-  let content = m.content;
-  if (m.mentions.users.size == 1) {
-    content = m.content.split(' ')[0];
-  }
-  console.log('aa')
-
-
-  let rank = parseInt(content, 10);
-  console.log(content);
-  console.log(rank);
-  if (isNaN(rank)) { rank = 0; }
-  // if (!ranks.has(rank)) {
-  //   console.log('ab')
-  //   return;
-  // }
-  points = rank * 10 + 2500;
-
-
-  console.log('b')
-
-  const [gpqDat, doNothing] = await new Promise(async (resolve) => {
-    const doc = db.collection('points').doc(userId);
-    const curr = await doc.get();
-    let doNothing = false;
-    console.log('c')
-    if (curr.exists) {
-      const newGpq = curr.data().newFlag;
-      if (newGpq) {
-        if (newGpq[week]) {
-          if (isRemove) {
-            delete newGpq[week];
-          } else {
-            doNothing = true
-          }
-        } else {
-          if (isRemove) {
-            doNothing = true;
+    console.log('b')
+    const [flagDat, changePoints] = await new Promise(async (resolve) => {
+      const doc = db.collection('points').doc(userId);
+      const curr = await doc.get();
+      let changePoints = 0;
+      console.log('c')
+      if (curr.exists) {
+        const flag = curr.data().flag;
+        console.log('flag');
+        console.log(flag);
+        if (flag) {
+          if (flag[week]) {
+            // Same or higher, process
+            if (points >= flag[week]) {
+              if (isRemove && points === flag[week]) {
+                changePoints = -points - 2500;
+                delete flag[week];
+              } else {
+                changePoints = points - flag[week];
+                flag[week] = points;
+              }
+            }
+            // Otherwise dont need to change anything
           } else {
             // First post of week
-            newGpq[week] = points;
+            flag[week] = points;
+            changePoints = points + 2500;
           }
+          resolve([flag, changePoints]);
+          return;
         }
-        resolve([newGpq, doNothing]);
-        return;
       }
-    }
-    // First ever flag post
-    resolve([{
-      [week]: points
-    }, false])
-  });
+      // First ever flag post
+      resolve([{
+        [week]: points
+      }, points + 2500])
+    });
 
-  console.log('d')
-  if (!doNothing) {
-    console.log('e')
-    if (isRemove) {
-      points = -points;
-    }
-
+    console.log('d')
     await db.collection('points').doc(userId).set({
-      [weekPointString]: FieldValue.increment(points),
-      totalPoints: FieldValue.increment(points),
-      newFlag: gpqDat
+      [weekPointString]: FieldValue.increment(changePoints),
+      totalPoints: FieldValue.increment(changePoints),
+      flag: flagDat
     }, { merge: true });
-  }
-  if (!isRemove && !doNothing) {
+
+    console.log('e')
+    if (!isRemove) {
+      m.react('✅');
+    }
     console.log('f')
-    m.react('✅');
-    console.log('g')
   }
 }
+
+
+// async function changeFlagPoints(m, isRemove = false) {
+//   console.log('\nchangeFlagPoints')
+//   console.log(m.author);
+//   const week = weekStart;
+//   let userId = m.author.id;
+
+
+//   if (m.content.length == 0) {
+//     console.log('no point value posted')
+//     return
+//   }
+
+//   console.log('a')
+
+//   let content = m.content;
+//   if (m.mentions.users.size == 1) {
+//     content = m.content.split(' ')[0];
+//   }
+//   console.log('aa')
+
+
+//   let rank = parseInt(content, 10);
+//   console.log(content);
+//   console.log(rank);
+//   if (isNaN(rank)) { rank = 0; }
+//   // if (!ranks.has(rank)) {
+//   //   console.log('ab')
+//   //   return;
+//   // }
+//   points = rank * 10 + 2500;
+
+
+//   console.log('b')
+
+//   const [gpqDat, doNothing] = await new Promise(async (resolve) => {
+//     const doc = db.collection('points').doc(userId);
+//     const curr = await doc.get();
+//     let doNothing = false;
+//     console.log('c')
+//     if (curr.exists) {
+//       const newGpq = curr.data().newFlag;
+//       if (newGpq) {
+//         if (newGpq[week]) {
+//           if (isRemove) {
+//             delete newGpq[week];
+//           } else {
+//             doNothing = true
+//           }
+//         } else {
+//           if (isRemove) {
+//             doNothing = true;
+//           } else {
+//             // First post of week
+//             newGpq[week] = points;
+//           }
+//         }
+//         resolve([newGpq, doNothing]);
+//         return;
+//       }
+//     }
+//     // First ever flag post
+//     resolve([{
+//       [week]: points
+//     }, false])
+//   });
+
+//   console.log('d')
+//   if (!doNothing) {
+//     console.log('e')
+//     if (isRemove) {
+//       points = -points;
+//     }
+
+//     await db.collection('points').doc(userId).set({
+//       [weekPointString]: FieldValue.increment(points),
+//       totalPoints: FieldValue.increment(points),
+//       newFlag: gpqDat
+//     }, { merge: true });
+//   }
+//   if (!isRemove && !doNothing) {
+//     console.log('f')
+//     m.react('✅');
+//     console.log('g')
+//   }
+// }
 
 
 
