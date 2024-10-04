@@ -115,6 +115,7 @@ async function changeFlagPoints(m, isRemove = false) {
   let userId = m.author.id;
   let points = 300;
   if (m.content.length > 0) {
+    console.log('a')
     let content = m.content;
     if (m.mentions.users.size == 1) {
       content = m.content.split(' ')[0];
@@ -131,10 +132,12 @@ async function changeFlagPoints(m, isRemove = false) {
       userId = m.mentions.users.firstKey();
     }
 
+    console.log('b')
     const [flagDat, changePoints] = await new Promise(async (resolve) => {
       const doc = db.collection('points').doc(userId);
       const curr = await doc.get();
       let changePoints = 0;
+      console.log('c')
       if (curr.exists) {
         const flag = curr.data().flag;
         console.log(flag);
@@ -166,15 +169,18 @@ async function changeFlagPoints(m, isRemove = false) {
       }, points + 2500])
     });
 
+    console.log('d')
     await db.collection('points').doc(userId).set({
       [weekPointString]: FieldValue.increment(changePoints),
       totalPoints: FieldValue.increment(changePoints),
       flag: flagDat
     }, { merge: true });
 
+    console.log('e')
     if (!isRemove) {
       m.react('✅');
     }
+    console.log('f')
   }
 }
 
