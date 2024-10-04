@@ -105,7 +105,7 @@ setTimeout(() => {
 
 let adminPoints = {};
 
-const ranks = new Set([1000, 800, 650, 550, 450, 400, 350, 300, 250, 200, 100, 0]);
+// const ranks = new Set([1000, 800, 650, 550, 450, 400, 350, 300, 250, 200, 100, 0]);
 
 
 // async function changeFlagPoints(m, isRemove = false) {
@@ -214,10 +214,10 @@ async function changeFlagPoints(m, isRemove = false) {
   console.log(content);
   console.log(rank);
   if (isNaN(rank)) { rank = 0; }
-  if (!ranks.has(rank)) {
-    console.log('ab')
-    return;
-  }
+  // if (!ranks.has(rank)) {
+  //   console.log('ab')
+  //   return;
+  // }
   points = rank * 10 + 2500;
 
 
